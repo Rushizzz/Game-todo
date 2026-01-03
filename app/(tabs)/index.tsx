@@ -1,98 +1,170 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
+import RadarChart from '../../components/RadarChart';
+import TaskCard from '../../components/TaskCard';
+import { Colors } from '../../constants/Colors';
+import { useGameStore } from '../../stores/gameStore';
+import { AttributeName } from '../../types/game';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+export default function DashboardScreen() {
+  const { hp, maxHp, userName, attributes, tasks, completeTask, checkDailyReset } = useGameStore();
+  const confettiRef = useRef<ConfettiCannon>(null);
 
-export default function HomeScreen() {
+  useEffect(() => {
+    checkDailyReset();
+  }, []);
+
+  const handleTaskComplete = (id: string) => {
+    const { levelUp } = completeTask(id);
+    if (levelUp) {
+      confettiRef.current?.start();
+    }
+  };
+
+  const attributeList = ['intelligence', 'strength', 'love', 'network', 'family'].map(
+    (name) => attributes[name as AttributeName]
+  );
+
+  // Find max level for chart scaling (at least 10)
+  const maxLevel = Math.max(10, ...attributeList.map(a => a.level));
+
+  const activeTasks = tasks.filter(t => !t.completed).slice(0, 3); // Top 3 tasks
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scroll}>
+        {/* Header Stats */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.greeting}>Welcome, {userName}</Text>
+            <Text style={styles.subGreeting}>Level up your life.</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={styles.statLabel}>HP</Text>
+            <Text style={[styles.statValue, { color: Colors.danger }]}>{hp}/{maxHp}</Text>
+          </View>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {/* Hero Chart & Details */}
+        <View style={styles.chartContainer}>
+          <Text style={styles.sectionTitle}>STATUS</Text>
+          <RadarChart data={attributeList} maxValue={maxLevel} size={250} />
+
+          <View style={styles.statsGrid}>
+            {attributeList.map(attr => (
+              <View key={attr.name} style={styles.miniStat}>
+                <Text style={[styles.miniStatLabel, { color: Colors.attributes[attr.name] }]}>
+                  {attr.name.toUpperCase().substring(0, 3)}
+                </Text>
+                <Text style={styles.miniStatValue}>{attr.level}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Suggested Quests */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ACTIVE QUESTS</Text>
+          {activeTasks.length > 0 ? (
+            activeTasks.map(task => (
+              <TaskCard key={task.id} task={task} onComplete={handleTaskComplete} />
+            ))
+          ) : (
+            <Text style={styles.emptyText}>No active quests. Check the Quest Board.</Text>
+          )}
+        </View>
+      </ScrollView>
+
+      <ConfettiCannon
+        count={200}
+        origin={{ x: -10, y: 0 }}
+        autoStart={false}
+        ref={confettiRef}
+        fallSpeed={3000}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  scroll: {
+    padding: 16,
+  },
+  header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 24,
+    backgroundColor: Colors.surface,
+    padding: 16,
+    borderRadius: 12,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  greeting: {
+    color: Colors.text,
+    fontSize: 18,
+    fontWeight: 'bold',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  subGreeting: {
+    color: Colors.textDim,
+    fontSize: 12,
   },
+  statBox: {
+    alignItems: 'center',
+  },
+  statLabel: {
+    color: Colors.textDim,
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  chartContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+    backgroundColor: Colors.surface,
+    padding: 16,
+    borderRadius: 12,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingTop: 16,
+  },
+  miniStat: {
+    alignItems: 'center',
+  },
+  miniStatLabel: {
+    fontWeight: 'bold',
+    fontSize: 10,
+    marginBottom: 4,
+  },
+  miniStatValue: {
+    color: Colors.text,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    color: Colors.textDim,
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  emptyText: {
+    color: Colors.textDim,
+    fontStyle: 'italic',
+  }
 });
