@@ -1,50 +1,85 @@
-# Welcome to your Expo app 👋
+# Indexical Avatar: Level Up Your Life ⚔️
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Indexical Avatar** is a gamified productivity application that transforms your daily life into an RPG adventure. Complete tasks to gain XP, level up your attributes (Intelligence, Strength, Love, Network, Family), and visualize your personal growth with a dynamic radar chart.
 
-## Get started
+Built with **React Native**, **Expo**, and **TypeScript**.
 
-1. Install dependencies
+## 🚀 Features
 
-   ```bash
-   npm install
-   ```
+- **RPG Attribute System**: Every task is linked to an attribute (e.g., "Read a book" -> Intelligence). Watch your stats grow as you complete tasks.
+- **Dynamic Radar Chart**: Visual representation of your attribute balance. Are you balanced or specialized?
+- **Daily Quests**: Mark quests as "Daily" to have them automatically reset each day if you haven't completed them.
+- **XP Progression**: Gain experience points to level up. 
+- **Swipe Gestures**:
+  - **Swipe Right**: Instantly delete a quest.
+- **Interactive UI**:
+  - Haptic feedback on interactions.
+  - Confetti celebrations on level-up!
+  - Dark Mode aesthetic.
+- **Offline Persistence**: Your progress is saved locally.
 
-2. Start the app
+## 🛠️ Tech Stack
 
-   ```bash
-   npx expo start
-   ```
+- **Framework**: [React Native](https://reactnative.dev/) with [Expo](https://expo.dev/) (SDK 52)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **State Management**: [Zustand](https://github.com/pmndrs/zustand) with MMKV/AsyncStorage persistence.
+- **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction/)
+- **UI/Icons**: `lucide-react-native`, `react-native-svg`
+- **Animations**: `react-native-confetti-cannon`, `react-native-reanimated`
 
-In the output, you'll find options to open the app in a
+## 📦 Installation
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/Rushizzz/Game-todo.git
+    cd Game-todo
+    ```
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
 
-## Get a fresh project
+3.  **Start the app**:
+    ```bash
+    npx expo start
+    ```
 
-When you're ready, run:
+4.  **Run on Device**:
+    - Scan the QR code with the **Expo Go** app (Android/iOS).
+    - Or run on an emulator: `A` for Android, `I` for iOS simulator.
 
-```bash
-npm run reset-project
-```
+## 📖 Usage Guide
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Dashboard
+- View your HP (Health Points) and Level.
+- Check the **Radar Chart** to see your current attribute build.
+- See your top 3 active quests.
 
-## Learn more
+### Quests
+- **Add Quest**: Tap the `+` button. Select Title, Difficulty, Attribute, and "Daily" status.
+- **Complete**: Tap the circle to complete. Get XP!
+- **Uncomplete**: Tap the checkmark to undo (reverts XP).
+- **Edit**: Tap the pencil icon on any uncompleted task.
+- **Delete**: Swipe the task card to the **Right**.
 
-To learn more about developing your project with Expo, look at the following resources:
+### Attributes
+- View detailed progress bars for each attribute active level.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Profile
+- Edit your "Hunter Name".
+- Reset game data (Debug option).
 
-## Join the community
+## 🤝 Contributing
 
-Join our community of developers creating universal apps.
+Contributions are welcome! Whether it's fixing bugs, improving the UI, or adding new RPG mechanics.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
