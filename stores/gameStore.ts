@@ -9,6 +9,7 @@ interface GameActions {
     addTask: (task: Omit<Task, 'id' | 'createdAt' | 'completed'>) => void;
     updateTask: (taskId: string, updates: Partial<Task>) => void;
     completeTask: (taskId: string) => { levelUp: boolean };
+    uncompleteTask: (taskId: string) => void; // New Action
     deleteTask: (taskId: string) => void;
     damagePlayer: (amount: number) => void;
     healPlayer: (amount: number) => void;
@@ -68,13 +69,11 @@ export const useGameStore = create<GameState & GameActions>()(
                 if (taskIndex === -1) return { levelUp: false };
 
                 const task = state.tasks[taskIndex];
-                if (task.completed) return { levelUp: false }; // Already completed
+                if (task.completed) return { levelUp: false };
 
-                // Calculate Rewards
                 const xpGain = XP_REWARDS[task.difficulty];
                 let levelUp = false;
 
-                // Update Attribute
                 const attr = state.attributes[task.attribute];
                 const newTotalXp = attr.totalXp + xpGain;
                 const newLevel = calculateLevelFromXp(newTotalXp);
@@ -93,7 +92,6 @@ export const useGameStore = create<GameState & GameActions>()(
                     },
                 };
 
-                // If secondary attribute exists
                 if (task.attributeSecondary) {
                     const attr2 = state.attributes[task.attributeSecondary];
                     const xp2 = Math.floor(xpGain * 0.5);
@@ -109,7 +107,6 @@ export const useGameStore = create<GameState & GameActions>()(
                     };
                 }
 
-                // Update Tasks
                 const updatedTasks = [...state.tasks];
                 updatedTasks[taskIndex] = { ...task, completed: true, completedAt: Date.now() };
 
@@ -120,6 +117,56 @@ export const useGameStore = create<GameState & GameActions>()(
 
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 return { levelUp };
+            },
+
+            uncompleteTask: (taskId) => {
+                const state = get();
+                const taskIndex = state.tasks.findIndex((t) => t.id === taskId);
+                if (taskIndex === -1) return;
+
+                const task = state.tasks[taskIndex];
+                if (!task.completed) return;
+
+                const xpGain = XP_REWARDS[task.difficulty];
+
+                const attr = state.attributes[task.attribute];
+                // Prevent negative XP
+                const newTotalXp = Math.max(0, attr.totalXp - xpGain);
+                const newLevel = calculateLevelFromXp(newTotalXp);
+
+                const newAttributes = {
+                    ...state.attributes,
+                    [task.attribute]: {
+                        ...attr,
+                        totalXp: newTotalXp,
+                        xp: newTotalXp,
+                        level: newLevel,
+                    },
+                };
+
+                if (task.attributeSecondary) {
+                    const attr2 = state.attributes[task.attributeSecondary];
+                    const xp2 = Math.floor(xpGain * 0.5);
+                    const newTotalXp2 = Math.max(0, attr2.totalXp - xp2);
+                    const newLevel2 = calculateLevelFromXp(newTotalXp2);
+
+                    newAttributes[task.attributeSecondary] = {
+                        ...attr2,
+                        totalXp: newTotalXp2,
+                        xp: newTotalXp2,
+                        level: newLevel2,
+                    };
+                }
+
+                const updatedTasks = [...state.tasks];
+                updatedTasks[taskIndex] = { ...task, completed: false, completedAt: undefined };
+
+                set((state) => ({
+                    tasks: updatedTasks,
+                    attributes: newAttributes,
+                }));
+
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
             },
 
             deleteTask: (taskId) => {
@@ -146,7 +193,6 @@ export const useGameStore = create<GameState & GameActions>()(
                 const today = new Date().toDateString();
 
                 if (lastDate !== today) {
-                    // Reset daily tasks
                     const resetTasks = state.tasks.map(t => {
                         if (t.isDaily) {
                             return { ...t, completed: false, completedAt: undefined };

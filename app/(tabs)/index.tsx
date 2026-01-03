@@ -1,14 +1,18 @@
 import React, { useEffect, useRef } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import RadarChart from '../../components/RadarChart';
 import TaskCard from '../../components/TaskCard';
 import { Colors } from '../../constants/Colors';
 import { useGameStore } from '../../stores/gameStore';
 import { AttributeName } from '../../types/game';
 
+const { width } = Dimensions.get('window');
+
 export default function DashboardScreen() {
-  const { hp, maxHp, userName, attributes, tasks, completeTask, checkDailyReset } = useGameStore();
+  const { hp, maxHp, userName, attributes, tasks, completeTask } = useGameStore(); // Removing uncomplete for now as dashboard only shows active
+  const { checkDailyReset } = useGameStore();
   const confettiRef = useRef<ConfettiCannon>(null);
 
   useEffect(() => {
@@ -32,58 +36,63 @@ export default function DashboardScreen() {
   const activeTasks = tasks.filter(t => !t.completed).slice(0, 3); // Top 3 tasks
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Header Stats */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Welcome, {userName}</Text>
-            <Text style={styles.subGreeting}>Level up your life.</Text>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scroll}>
+          {/* Header Stats */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>Welcome, {userName}</Text>
+              <Text style={styles.subGreeting}>Level up your life.</Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>HP</Text>
+              <Text style={[styles.statValue, { color: Colors.danger }]}>{hp}/{maxHp}</Text>
+            </View>
           </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>HP</Text>
-            <Text style={[styles.statValue, { color: Colors.danger }]}>{hp}/{maxHp}</Text>
+
+          {/* Hero Chart & Details */}
+          <View style={styles.chartContainer}>
+            <Text style={styles.sectionTitle}>STATUS</Text>
+            <RadarChart data={attributeList} maxValue={maxLevel} size={250} />
+
+            <View style={styles.statsGrid}>
+              {attributeList.map(attr => (
+                <View key={attr.name} style={styles.miniStat}>
+                  <Text style={[styles.miniStatLabel, { color: Colors.attributes[attr.name] }]}>
+                    {attr.name.toUpperCase().substring(0, 3)}
+                  </Text>
+                  <Text style={styles.miniStatValue}>{attr.level}</Text>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
 
-        {/* Hero Chart & Details */}
-        <View style={styles.chartContainer}>
-          <Text style={styles.sectionTitle}>STATUS</Text>
-          <RadarChart data={attributeList} maxValue={maxLevel} size={250} />
-
-          <View style={styles.statsGrid}>
-            {attributeList.map(attr => (
-              <View key={attr.name} style={styles.miniStat}>
-                <Text style={[styles.miniStatLabel, { color: Colors.attributes[attr.name] }]}>
-                  {attr.name.toUpperCase().substring(0, 3)}
-                </Text>
-                <Text style={styles.miniStatValue}>{attr.level}</Text>
-              </View>
-            ))}
+          {/* Suggested Quests */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>ACTIVE QUESTS</Text>
+            {activeTasks.length > 0 ? (
+              activeTasks.map(task => (
+                <TaskCard key={task.id} task={task} onComplete={handleTaskComplete} />
+              ))
+            ) : (
+              <Text style={styles.emptyText}>No active quests. Check the Quest Board.</Text>
+            )}
           </View>
-        </View>
+        </ScrollView>
 
-        {/* Suggested Quests */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>ACTIVE QUESTS</Text>
-          {activeTasks.length > 0 ? (
-            activeTasks.map(task => (
-              <TaskCard key={task.id} task={task} onComplete={handleTaskComplete} />
-            ))
-          ) : (
-            <Text style={styles.emptyText}>No active quests. Check the Quest Board.</Text>
-          )}
+        <View style={styles.confettiContainer} pointerEvents="none">
+          <ConfettiCannon
+            count={200}
+            origin={{ x: width / 2, y: -50 }}
+            autoStart={false}
+            ref={confettiRef}
+            fallSpeed={3000}
+            fadeOut={true}
+          />
         </View>
-      </ScrollView>
-
-      <ConfettiCannon
-        count={200}
-        origin={{ x: -10, y: 0 }}
-        autoStart={false}
-        ref={confettiRef}
-        fallSpeed={3000}
-      />
-    </View>
+      </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -91,6 +100,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  confettiContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1000,
   },
   scroll: {
     padding: 16,

@@ -1,6 +1,7 @@
-import { Brain, CheckCircle, Circle, Dumbbell, Heart, Network, Users } from 'lucide-react-native';
+import { Brain, CheckCircle, Circle, Dumbbell, Edit2, Heart, Network, Users } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { Colors } from '../constants/Colors';
 import { Task } from '../types/game';
 
@@ -15,37 +16,66 @@ const AttributeIcons: Record<string, any> = {
 interface TaskCardProps {
     task: Task;
     onComplete: (id: string) => void;
+    onUncomplete?: (id: string) => void;
+    onDelete?: (id: string) => void;
+    onEdit?: (task: Task) => void;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onComplete, onUncomplete, onDelete, onEdit }) => {
     const Icon = AttributeIcons[task.attribute] || Circle;
     const color = Colors.attributes[task.attribute] || Colors.text;
 
+    const renderRightActions = (progress: any, dragX: any) => {
+        return (
+            <TouchableOpacity style={styles.deleteAction} onPress={() => onDelete?.(task.id)}>
+                <Text style={styles.actionText}>Delete</Text>
+            </TouchableOpacity>
+        );
+    };
+
+    const handlePress = () => {
+        if (task.completed) {
+            onUncomplete?.(task.id);
+        } else {
+            onComplete(task.id);
+        }
+    };
+
     return (
-        <View style={[styles.card, { borderColor: color }]}>
-            <View style={styles.header}>
-                <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
-                    <Icon size={20} color={color} />
+        <Swipeable
+            renderRightActions={renderRightActions}
+            onSwipeableRightOpen={() => onDelete?.(task.id)}
+        >
+            <View style={[styles.card, { borderColor: color }]}>
+                <View style={styles.header}>
+                    <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
+                        <Icon size={20} color={color} />
+                    </View>
+                    <View style={styles.info}>
+                        <Text style={[styles.title, task.completed && styles.completedText]}>{task.title}</Text>
+                        <Text style={styles.subtitle}>
+                            {task.attribute.toUpperCase()} • {task.difficulty.toUpperCase()}
+                        </Text>
+                    </View>
                 </View>
-                <View style={styles.info}>
-                    <Text style={styles.title}>{task.title}</Text>
-                    <Text style={styles.subtitle}>
-                        {task.attribute.toUpperCase()} • {task.difficulty.toUpperCase()}
-                    </Text>
+
+                <View style={styles.actions}>
+                    {!task.completed && onEdit && (
+                        <TouchableOpacity onPress={() => onEdit(task)} style={styles.editBtn}>
+                            <Edit2 size={20} color={Colors.textDim} />
+                        </TouchableOpacity>
+                    )}
+
+                    <TouchableOpacity onPress={handlePress}>
+                        {task.completed ? (
+                            <CheckCircle size={28} color={Colors.primary} />
+                        ) : (
+                            <Circle size={28} color={Colors.textDim} />
+                        )}
+                    </TouchableOpacity>
                 </View>
             </View>
-
-            <TouchableOpacity
-                onPress={() => onComplete(task.id)}
-                disabled={task.completed}
-            >
-                {task.completed ? (
-                    <CheckCircle size={28} color={Colors.primary} />
-                ) : (
-                    <Circle size={28} color={Colors.textDim} />
-                )}
-            </TouchableOpacity>
-        </View>
+        </Swipeable>
     );
 };
 
@@ -59,7 +89,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         borderLeftWidth: 4,
-        // Shadow for premium feel
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.3,
@@ -84,11 +113,47 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    completedText: {
+        textDecorationLine: 'line-through',
+        color: Colors.textDim,
+    },
     subtitle: {
         color: Colors.textDim,
         fontSize: 10,
         marginTop: 4,
     },
+    actions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 16,
+    },
+    editBtn: {
+        padding: 4,
+    },
+    deleteAction: {
+        backgroundColor: Colors.danger,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
+        paddingHorizontal: 20,
+        marginBottom: 12,
+        marginTop: 0,
+        borderRadius: 12,
+        flex: 1,
+    },
+    dismissAction: {
+        backgroundColor: Colors.textDim,
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        paddingHorizontal: 20,
+        marginBottom: 12,
+        borderRadius: 12,
+        flex: 1,
+    },
+    actionText: {
+        color: 'white',
+        fontWeight: 'bold',
+        padding: 20,
+    }
 });
 
 export default TaskCard;
