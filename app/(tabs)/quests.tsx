@@ -27,6 +27,17 @@ export default function QuestsScreen() {
     const uncompletedTasks = tasks.filter(t => !t.completed);
     const completedTasks = tasks.filter(t => t.completed);
 
+    const DAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    
+    const [selectedDays, setSelectedDays] = useState<number[]>([]);
+
+    const toggleDay = (index: number) => {
+        setSelectedDays(prev => 
+            prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+        );
+    };
+
+
     const openCreateModal = () => {
         setEditingTaskId(null);
         setTitle('');
@@ -45,26 +56,45 @@ export default function QuestsScreen() {
         setModalVisible(true);
     }
 
-    const handleSaveTask = () => {
-        if (!title) return;
+    // const handleSaveTask = () => {
+    //     if (!title) return;
 
-        if (editingTaskId) {
-            updateTask(editingTaskId, {
-                title,
-                difficulty,
-                attribute,
-                isDaily
-            });
-        } else {
-            addTask({
-                title,
-                difficulty,
-                attribute,
-                isDaily
-            });
-        }
-        setModalVisible(false);
+    //     if (editingTaskId) {
+    //         updateTask(editingTaskId, {
+    //             title,
+    //             difficulty,
+    //             attribute,
+    //             isDaily
+    //         });
+    //     } else {
+    //         addTask({
+    //             title,
+    //             difficulty,
+    //             attribute,
+    //             isDaily
+    //         });
+    //     }
+    //     setModalVisible(false);
+    // };
+
+    const handleSaveTask = () => {
+    if (!title) return;
+    const taskData = {
+        title,
+        difficulty,
+        attribute,
+        selectedDays, // Store the array of days (0-6)
+        isDaily: selectedDays.length === 7
     };
+
+    if (editingTaskId) {
+        updateTask(editingTaskId, taskData);
+    } else {
+        addTask(taskData);
+    }
+    setModalVisible(false);
+    };
+
 
     const handleComplete = (id: string) => {
         const { levelUp } = completeTask(id);
@@ -132,11 +162,31 @@ export default function QuestsScreen() {
                             />
 
                             <View style={styles.row}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                {/* <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                     <Repeat color={Colors.textDim} size={16} />
                                     <Text style={[styles.label, { marginBottom: 0, marginLeft: 8 }]}>Daily Quest</Text>
+                                </View> */}
+                                {/* <Switch value={isDaily} onValueChange={setIsDaily} trackColor={{ false: Colors.surfaceHighlight, true: Colors.primary }} /> */}
+                                {/* <Text style={styles.label}>Repeat On</Text> */}
+                                <View style={styles.daysRow}>
+                                    {DAYS.map((day, index) => (
+                                        <TouchableOpacity
+                                            key={index}
+                                            style={[
+                                                styles.dayCircle,
+                                                selectedDays.includes(index) && { backgroundColor: Colors.primary }
+                                            ]}
+                                            onPress={() => toggleDay(index)}
+                                        >
+                                            <Text style={[
+                                                styles.dayText,
+                                                selectedDays.includes(index) && { color: 'black', fontWeight: 'bold' }
+                                            ]}>
+                                                {day}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
                                 </View>
-                                <Switch value={isDaily} onValueChange={setIsDaily} trackColor={{ false: Colors.surfaceHighlight, true: Colors.primary }} />
                             </View>
 
                             <Text style={styles.label}>Attribute</Text>
@@ -307,4 +357,23 @@ const styles = StyleSheet.create({
         color: 'black',
         fontWeight: 'bold',
     },
+    daysRow: {
+        width: '100%',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    dayCircle: {
+        width: 35,
+        height: 35,
+        borderRadius: 17.5,
+        borderWidth: 1,
+        borderColor: Colors.surfaceHighlight,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dayText: {
+        color: Colors.textDim,
+        fontSize: 12,
+    }
 });
